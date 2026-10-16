@@ -263,9 +263,16 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config GeoIpConfig, log log.L
 	cityEnc := url.QueryEscape(geoIpData.City)
 	ispEnc := url.QueryEscape(geoIpData.Isp)
 
+	// These headers tell downstream services where the caller is. A client-supplied value
+	// must not survive, otherwise the caller can add its own value next to the computed one
+	// and whichever value the service reads is no longer trustworthy.
+	proxywasm.RemoveHttpRequestHeader("X-Higress-Geo-Country")
 	proxywasm.AddHttpRequestHeader("X-Higress-Geo-Country", countryEnc)
+	proxywasm.RemoveHttpRequestHeader("X-Higress-Geo-Province")
 	proxywasm.AddHttpRequestHeader("X-Higress-Geo-Province", provinceEnc)
+	proxywasm.RemoveHttpRequestHeader("X-Higress-Geo-City")
 	proxywasm.AddHttpRequestHeader("X-Higress-Geo-City", cityEnc)
+	proxywasm.RemoveHttpRequestHeader("X-Higress-Geo-Isp")
 	proxywasm.AddHttpRequestHeader("X-Higress-Geo-Isp", ispEnc)
 
 	return types.ActionContinue
